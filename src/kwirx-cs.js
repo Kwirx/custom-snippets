@@ -1,4 +1,5 @@
 jQuery(document).ready(function($) {
+  // Initialize CodeMirror settings
   var editorSettings = wp.codeEditor.defaultSettings ? _.clone(wp.codeEditor.defaultSettings) : {};
   editorSettings.codemirror = _.extend(
       {},
@@ -15,11 +16,14 @@ jQuery(document).ready(function($) {
       }
   );
 
+  // Initialize the CodeMirror editor
   var editor = wp.codeEditor.initialize($('#kwirx_cs_code_snippet'), editorSettings);
 
+  // Handle form submission
   $('#kwirx-cs-form').on('submit', function(e) {
       e.preventDefault();
       var code = editor.codemirror.getValue();
+      
       $.ajax({
           url: kwirx_cs_ajax.ajax_url,
           type: 'POST',
@@ -40,6 +44,7 @@ jQuery(document).ready(function($) {
       });
   });
 
+  // Dismiss the notice
   $(document).on('click', '.notice-dismiss', function() {
       $(this).closest('.notice').remove();
   });
