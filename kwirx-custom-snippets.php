@@ -2,7 +2,7 @@
 /*
 Plugin Name: Kwirx Custom Snippets
 Description: A plugin to insert custom PHP code snippets.
-Version: 1.0
+Version: 1.2
 Author: Kwirx Creative
 */
 
@@ -11,12 +11,12 @@ Author: Kwirx Creative
  */
 function kwirx_cs_add_admin_page() {
     add_menu_page(
-        'Kwirx Custom Snippets', 
-        'Code Snippet', 
-        'manage_options', 
-        'kwirx-custom-snippets', 
-        'kwirx_cs_admin_page', 
-        'dashicons-editor-code', 
+        'Kwirx Custom Snippets',
+        'Code Snippet',
+        'manage_options',
+        'kwirx-custom-snippets',
+        'kwirx_cs_admin_page',
+        'dashicons-editor-code',
         110
     );
 }
@@ -32,11 +32,11 @@ function kwirx_cs_enqueue_code_editor($hook_suffix) {
         return;
     }
     // Enqueue CodeMirror editor and required scripts/styles
-    wp_enqueue_code_editor(array('type' => 'text/x-php'));
+    wp_enqueue_code_editor(array('type' => 'application/x-httpd-php'));
     wp_enqueue_script('wp-theme-plugin-editor');
     wp_enqueue_style('wp-codemirror');
     // Enqueue custom JavaScript file for handling form submission and AJAX
-    wp_enqueue_script('kwirx_cs_custom_js', plugin_dir_url(__FILE__) . 'kwirx-cs.js', array('jquery'), null, true);
+    wp_enqueue_script('kwirx_cs_custom_js', plugin_dir_url(__FILE__) . 'src/kwirx-cs.js', array('jquery'), null, true);
     // Pass the AJAX URL to the JavaScript file using localization
     wp_localize_script('kwirx_cs_custom_js', 'kwirx_cs_ajax', array('ajax_url' => admin_url('admin-ajax.php')));
     // Add a resize script to adjust the CodeMirror editor height
@@ -57,7 +57,7 @@ function kwirx_cs_admin_page() {
             <?php wp_nonce_field('kwirx_cs_save_code_snippet', 'kwirx_cs_nonce'); ?>
             <!-- Textarea for entering the code snippet -->
             <textarea id="kwirx_cs_code_snippet" name="kwirx_cs_code_snippet"><?php echo esc_textarea(get_option('kwirx_cs_code_snippet', '')); ?></textarea>
-            <input type="submit" class="button-primary" value="Save Changes" />
+            <?php submit_button('Save Changes'); ?>
         </form>
     </div>
     <?php
@@ -69,7 +69,7 @@ function kwirx_cs_admin_page() {
 function kwirx_cs_save_code_snippet() {
     if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'kwirx_cs_save_code_snippet')) {
         // Verify the nonce for security purposes
-        wp_send_json_error(array('message' => 'Invalid nonce'), 400);
+        wp_send_json_error(__('Invalid nonce.'), 400);
     }
 
     $code = isset($_POST['code']) ? wp_unslash($_POST['code']) : '';
@@ -86,7 +86,7 @@ function kwirx_cs_save_code_snippet() {
     update_option('kwirx_cs_code_snippet', $code);
 
     // Return success response
-    wp_send_json_success(array('message' => 'Code snippet saved successfully', 'code' => $code));
+    wp_send_json_success(array('message' => __('Code snippet saved successfully'), 'code' => $code));
 }
 add_action('wp_ajax_kwirx_cs_save_code_snippet', 'kwirx_cs_save_code_snippet');
 
@@ -148,10 +148,10 @@ function kwirx_cs_check_syntax($code) {
         $error_message = implode("\n", $output);
         preg_match('/on line (\d+)/', $error_message, $line_matches);
         preg_match('/error:(.*?) in/', $error_message, $message_matches);
-        
-        $line_number = isset($line_matches[1]) ? intval($line_matches[1]) : 'N/A';
+
+        $line_number = isset($line_matches[1]) ? intval($line_matches[1]) - 2 : 'N/A';
         $error_message = isset($message_matches[1]) ? trim($message_matches[1]) : $error_message;
-        
+
         return array('success' => false, 'data' => array('message' => $error_message, 'line' => $line_number));
     }
     return array('success' => true);
@@ -164,8 +164,8 @@ function kwirx_cs_check_syntax($code) {
  * @return string The sanitized PHP code.
  */
 function kwirx_cs_sanitize_code($input) {
-    $input = str_replace('<?php', '', $input);
-    $input = str_replace('?>', '', $input);
+    // Remove PHP opening and closing tags and escape double quotes
+    $input = str_replace(array('<?', '?>'), '', $input);
+    $input = str_replace('"', '\"', $input);
     return $input;
 }
-?>
