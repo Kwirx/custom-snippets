@@ -133,28 +133,24 @@ function kwirx_cs_add_editor_resize_script() {
  * @param string $code The PHP code to check.
  * @return array The result of the syntax check.
  */
+/**
+ * Checks for syntax errors in PHP code.
+ *
+ * @param string $code The PHP code to check.
+ * @return array The result of the syntax check.
+ */
 function kwirx_cs_check_syntax($code) {
-    $filename = tempnam(sys_get_temp_dir(), 'php');
-    // Save the code to a temporary file
-    file_put_contents($filename, "<?php\n" . $code);
-    // Execute syntax check using PHP's command-line "php -l" option
-    $output = null;
-    $result_code = null;
-    exec("php -l " . escapeshellarg($filename) . " 2>&1", $output, $result_code);
-    // Remove the temporary file
-    unlink($filename);
-    if ($result_code !== 0) {
-        // Extract the error message and line number from the output
-        $error_message = implode("\n", $output);
-        preg_match('/on line (\d+)/', $error_message, $line_matches);
-        preg_match('/error:(.*?) in/', $error_message, $message_matches);
+  $tokens = @token_get_all('<?php ' . $code); // Suppress errors using @
+  if ($tokens === false) {
+      return array('success' => false, 'data' => array('message' => 'Unable to tokenize code', 'line' => 'N/A'));
+  }
 
-        $line_number = isset($line_matches[1]) ? intval($line_matches[1]) - 2 : 'N/A';
-        $error_message = isset($message_matches[1]) ? trim($message_matches[1]) : $error_message;
-
-        return array('success' => false, 'data' => array('message' => $error_message, 'line' => $line_number));
-    }
-    return array('success' => true);
+  try {
+      $eval_result = eval('if (0) {' . $code . '}');
+      return array('success' => true);
+  } catch (ParseError $e) {
+      return array('success' => false, 'data' => array('message' => $e->getMessage(), 'line' => $e->getLine()));
+  }
 }
 
 /**
