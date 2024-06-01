@@ -1,3 +1,14 @@
+/**
+* Plugin Name: Kwirx Custom Snippets
+* Description: A plugin to insert custom PHP code snippets.
+* Version: 1.2
+* Author: Kwirx Creative
+ *
+ * This JavaScript file is used to handle the CodeMirror editor initialization
+ * and the AJAX form submission for saving custom PHP code snippets within the
+ * WordPress admin panel.
+ */
+
 jQuery(document).ready(function($) {
   // Initialize CodeMirror settings
   var editorSettings = wp.codeEditor.defaultSettings ? _.clone(wp.codeEditor.defaultSettings) : {};
