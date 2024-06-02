@@ -2,7 +2,7 @@
 /*
 Plugin Name: Kwirx Custom Snippets
 Description: A plugin to insert custom PHP code snippets.
-Version: 1.2
+Version: 1.3
 Author: Kwirx Creative
 */
 
@@ -133,12 +133,6 @@ function kwirx_cs_add_editor_resize_script() {
  * @param string $code The PHP code to check.
  * @return array The result of the syntax check.
  */
-/**
- * Checks for syntax errors in PHP code.
- *
- * @param string $code The PHP code to check.
- * @return array The result of the syntax check.
- */
 function kwirx_cs_check_syntax($code) {
   $tokens = @token_get_all('<?php ' . $code); // Suppress errors using @
   if ($tokens === false) {
@@ -160,8 +154,9 @@ function kwirx_cs_check_syntax($code) {
  * @return string The sanitized PHP code.
  */
 function kwirx_cs_sanitize_code($input) {
-    // Remove PHP opening and closing tags and escape double quotes
-    $input = str_replace(array('<?', '?>'), '', $input);
-    $input = str_replace('"', '\"', $input);
-    return $input;
+  // Remove PHP opening and closing tags
+  $input = str_replace(array('<?php', '<?', '?>'), '', $input);
+  // Trim leading and trailing whitespace
+  $input = trim($input);
+  return $input;
 }
